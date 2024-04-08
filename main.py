@@ -6,7 +6,7 @@ import random
 
 bot = TeleBot("6697923951:AAF_cJtJAwr7FxDQHt0cV8AxlG-tskFiU2A")
 
-admins = [5084753170]
+admins = [1971995086,1396561970]
 
 
 
