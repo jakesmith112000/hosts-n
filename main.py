@@ -122,5 +122,5 @@ def doc_handler(message):
         bot.send_message(message.chat.id,"Done Checking ")
         bot.send_message(message.chat.id,f"Success : {successful}")
     except:
-        pass
+        bot.send_message(message.chat.id, "Done ")
 bot.polling()
