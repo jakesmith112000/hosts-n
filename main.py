@@ -87,7 +87,7 @@ def save_ssn(ssn:int,name):
 
 
 def send_telegam(ssn:int,telegram_id:int):
-    bot.send_message(telegram_id,f"NEW Working SSN : {ssn}")
+    bot.send_message(telegram_id,f"NEW Working Fullz : {ssn}")
 
 
 @bot.message_handler(content_types=['document'])
@@ -101,7 +101,7 @@ def doc_handler(message):
         name = random.randint(0,1000000000000) * random.randint(100,10000000) / random.randint(1,1000)
         document_content = response.content.decode("utf-8")
         SSNs = document_content.splitlines()
-        bot.send_message(message.chat.id,"Successfully Received SSN File")
+        bot.send_message(message.chat.id,"Successfully Received Fullz File")
         bot.send_message(message.chat.id,f"Checking 🕐... ID : {name}")
         for ssn in SSNs:
             format_ = check_format(ssn)
