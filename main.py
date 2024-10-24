@@ -3,7 +3,7 @@ import re
 import random
 import string
 
-API_TOKEN = '7987008476:AAEwU9EiLyRiTX5ctpiy1nBIvxFzNne29KU'  # Replace with your actual Telegram bot token
+API_TOKEN = '7977418690:AAHcqaufu6xzKZx8hJ-M_m5EEkH1K_SadUQ'  # Replace with your actual Telegram bot token
 bot = telebot.TeleBot(API_TOKEN)
 
 # List of admin user IDs
