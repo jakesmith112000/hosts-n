@@ -7,7 +7,7 @@ API_TOKEN = '7977418690:AAHcqaufu6xzKZx8hJ-M_m5EEkH1K_SadUQ'  # Replace with you
 bot = telebot.TeleBot(API_TOKEN)
 
 # List of admin user IDs
-ADMINS = [1396561970, 1971995086, 5084753170]
+ADMINS = [1396561970, 1971995086, 5084753170, 1005445734]
 
 # Regex patterns for both options
 pattern1 = r'^\d{2}/\d{2}/\d{4}$'  # For a single date input
