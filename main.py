@@ -75,7 +75,7 @@ def handle_dd_format1(message, user_input):
         final_output = f"{formatted_date}{random_part}"
         
         # Send transformed DD info and ILDKRU string to the user
-        bot.send_message(message.chat.id, f"Transformed DD info:\n{final_output}\nILDKRU: {ildkru}")
+        bot.send_message(message.chat.id, f"Transformed DD info:\n{final_output}\n {ildkru}")
     except Exception as e:
         bot.send_message(message.chat.id, f"An error occurred while processing your input: {e}")
 
